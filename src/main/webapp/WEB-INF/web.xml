@@ -36,4 +36,27 @@
         <url-pattern>/logout</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>ProjectListServlet</servlet-name>
+        <servlet-class>controller.ProjectListServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ProjectListServlet</servlet-name>
+        <url-pattern>/projects</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>ProjectListServlet</servlet-name>
+        <url-pattern>/dashboard</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>CreateProjectServlet</servlet-name>
+        <servlet-class>controller.CreateProjectServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>CreateProjectServlet</servlet-name>
+        <url-pattern>/projects/new</url-pattern>
+    </servlet-mapping>
+
 </web-app>

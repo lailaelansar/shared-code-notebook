@@ -9,7 +9,7 @@
 <body>
 <div class="container mt-5">
     <h2>Create Project</h2>
-    <form method="post" action="#">
+    <form method="post" action="<%= request.getContextPath() %>/projects/new">
         <div class="mb-3">
             <label class="form-label">Title</label>
             <input type="text" name="title" class="form-control" required />

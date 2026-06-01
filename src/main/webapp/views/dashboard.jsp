@@ -17,15 +17,34 @@
         <a href="<%= request.getContextPath() %>/logout" class="btn btn-outline-secondary">Logout</a>
     </div>
 
-    <div class="card mb-3">
-        <div class="card-body">
-            <h5 class="card-title">My Projects</h5>
-            <p class="card-text">No projects available yet. Create your first project to get started.</p>
-            <a href="#" class="btn btn-primary disabled">Create Project</a>
+    <div class="mb-3">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5>My Projects</h5>
+            <a href="<%= request.getContextPath() %>/projects/new" class="btn btn-primary">Create Project</a>
+        </div>
+        <div class="row mt-3">
+            <% java.util.List<model.Project> projects = (java.util.List<model.Project>) request.getAttribute("projects");
+               if (projects != null && !projects.isEmpty()) {
+                   for (model.Project p : projects) {
+            %>
+            <div class="col-md-4 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title"><%= p.getTitle() %></h5>
+                        <p class="card-text"><%= p.getDescription() != null ? p.getDescription() : "" %></p>
+                        <p class="text-muted">Created: <%= p.getCreatedAt() != null ? p.getCreatedAt().toString() : "-" %></p>
+                        <p>Completed: <%= p.isCompleted() ? "Yes" : "No" %></p>
+                    </div>
+                </div>
+            </div>
+            <%       }
+               } else { %>
+            <div class="col-12">
+                <div class="alert alert-info">No projects available yet. Create your first project to get started.</div>
+            </div>
+            <% } %>
         </div>
     </div>
-
-    <div class="alert alert-info">Project CRUD and language associations will be added here next.</div>
 </div>
 </body>
 </html>
