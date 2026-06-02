@@ -4,6 +4,7 @@ class App {
         this.currentPage = null;
         this.user = this.getStoredUser();
         this.setupRouting();
+        this.installLogoutDelegation();
     }
 
     getStoredUser() {
@@ -14,6 +15,24 @@ class App {
     setupRouting() {
         window.addEventListener('hashchange', () => this.handleRoute());
         this.handleRoute();
+    }
+
+    installLogoutDelegation() {
+        if (this._logoutDelegationInstalled) return;
+        this._logoutDelegationInstalled = true;
+
+        document.addEventListener('click', async (e) => {
+            const btn = e.target.closest ? e.target.closest('.btn-logout') : null;
+            if (!btn) return;
+            console.log('Delegated logout click detected');
+            try {
+                await api.logout();
+            } catch (err) {
+                console.warn('Delegated logout request error', err);
+            }
+            this.user = null;
+            window.location.hash = '#/login';
+        });
     }
 
     handleRoute() {
