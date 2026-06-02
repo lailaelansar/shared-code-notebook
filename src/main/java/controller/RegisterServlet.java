@@ -1,47 +1,58 @@
 package controller;
 
 import dao.PersonDAO;
+import dto.AuthResponse;
+import dto.UserDto;
 import model.Person;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import util.TokenUtil;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
-import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Map;
 
-public class RegisterServlet extends HttpServlet {
-    private final PersonDAO personDAO = new PersonDAO();
+@RestController
+@RequestMapping("/api/auth")
+public class RegisterServlet {
+    private final PersonDAO personDAO;
 
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        req.getRequestDispatcher("/views/register.jsp").forward(req, resp);
+    public RegisterServlet(PersonDAO personDAO) {
+        this.personDAO = personDAO;
     }
 
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String firstName = req.getParameter("firstName");
-        String lastName = req.getParameter("lastName");
-        String email = req.getParameter("email");
-        String password = req.getParameter("password");
+    @PostMapping("/register")
+    public ResponseEntity<?> handleRegister(@RequestBody Map<String, String> request) {
+        String firstName = request.get("firstName");
+        String lastName = request.get("lastName");
+        String email = request.get("email");
+        String password = request.get("password");
 
-        String passwordHash = hashPassword(password);
+        if (firstName == null || lastName == null || email == null || password == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "All fields are required"));
+        }
+
+        String role = personDAO.hasUsers() ? "user" : "admin";
+
         Person person = new Person();
+        person.setRole(role);
         person.setFirstName(firstName);
         person.setLastName(lastName);
         person.setEmail(email);
-        person.setPasswordHash(passwordHash);
-        person.setRole("user");
+        person.setPasswordHash(hashPassword(password));
 
         boolean created = personDAO.register(person);
         if (created) {
-            resp.sendRedirect(req.getContextPath() + "/login?registered=true");
-        } else {
-            req.setAttribute("error", "Registration failed. Please try again.");
-            req.getRequestDispatcher("/views/register.jsp").forward(req, resp);
+            String token = TokenUtil.generateToken();
+            UserDto userDto = new UserDto(person.getId(), person.getFirstName(), person.getLastName(), person.getEmail(), person.getRole());
+            return ResponseEntity.status(HttpStatus.CREATED).body(new AuthResponse(token, userDto));
         }
+
+        return ResponseEntity.badRequest().body(Map.of("error", "Registration failed. Please try again."));
     }
 
     private String hashPassword(String password) {

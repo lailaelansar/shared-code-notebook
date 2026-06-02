@@ -1,40 +1,47 @@
 package controller;
 
 import dao.PersonDAO;
+import dto.AuthResponse;
+import dto.UserDto;
 import model.Person;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import util.TokenUtil;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-
-import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Map;
 
-public class LoginServlet extends HttpServlet {
-    private final PersonDAO personDAO = new PersonDAO();
+@RestController
+@RequestMapping("/api/auth")
+public class LoginServlet {
+    private final PersonDAO personDAO;
 
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        req.getRequestDispatcher("/views/login.jsp").forward(req, resp);
+    public LoginServlet(PersonDAO personDAO) {
+        this.personDAO = personDAO;
     }
 
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String email = req.getParameter("email");
-        String password = req.getParameter("password");
+    @PostMapping("/login")
+    public ResponseEntity<?> handleLogin(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        String password = request.get("password");
+
+        if (email == null || password == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Email and password are required"));
+        }
 
         Person person = personDAO.login(email, hashPassword(password));
         if (person != null) {
-            HttpSession session = req.getSession();
-            session.setAttribute("user", person);
-            resp.sendRedirect(req.getContextPath() + "/views/dashboard.jsp");
-        } else {
-            req.setAttribute("error", "Invalid email or password.");
-            req.getRequestDispatcher("/views/login.jsp").forward(req, resp);
+            String token = TokenUtil.generateToken();
+            UserDto userDto = new UserDto(person.getId(), person.getFirstName(), person.getLastName(), person.getEmail(), person.getRole());
+            return ResponseEntity.ok(new AuthResponse(token, userDto));
         }
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid email or password"));
     }
 
     private String hashPassword(String password) {

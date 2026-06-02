@@ -1,30 +1,24 @@
 package controller;
 
 import dao.ProjectDAO;
-import model.Person;
 import model.Project;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
-import java.io.IOException;
 import java.util.List;
 
-public class ProjectListServlet extends HttpServlet {
-    private final ProjectDAO projectDAO = new ProjectDAO();
+@RestController
+@RequestMapping("/api/projects")
+public class ProjectListServlet {
+    private final ProjectDAO projectDAO;
 
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        Person user = (Person) req.getSession().getAttribute("user");
-        if (user == null) {
-            resp.sendRedirect(req.getContextPath() + "/login");
-            return;
-        }
+    public ProjectListServlet(ProjectDAO projectDAO) {
+        this.projectDAO = projectDAO;
+    }
 
-        List<Project> projects = projectDAO.getProjectsByUser(user.getId());
-        req.setAttribute("projects", projects);
-        req.getRequestDispatcher("/views/dashboard.jsp").forward(req, resp);
+    @GetMapping
+    public List<Project> getAllProjects() {
+        return projectDAO.getAllProjects();
     }
 }

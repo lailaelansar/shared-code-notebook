@@ -2,57 +2,49 @@ package controller;
 
 import dao.ProjectDAO;
 import dao.ProgrammingLanguageDAO;
-import model.Person;
 import model.Project;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
-import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
-public class CreateProjectServlet extends HttpServlet {
-    private final ProjectDAO projectDAO = new ProjectDAO();
-    private final ProgrammingLanguageDAO languageDAO = new ProgrammingLanguageDAO();
+@RestController
+@RequestMapping("/api/projects")
+public class CreateProjectServlet {
+    private final ProjectDAO projectDAO;
+    private final ProgrammingLanguageDAO languageDAO;
 
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        req.getRequestDispatcher("/views/project-form.jsp").forward(req, resp);
+    public CreateProjectServlet(ProjectDAO projectDAO, ProgrammingLanguageDAO languageDAO) {
+        this.projectDAO = projectDAO;
+        this.languageDAO = languageDAO;
     }
 
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        Person user = (Person) req.getSession().getAttribute("user");
-        if (user == null) {
-            resp.sendRedirect(req.getContextPath() + "/login");
-            return;
+    @PostMapping
+    public ResponseEntity<?> createProject(@RequestBody Map<String, Object> request) {
+        String name = (String) request.get("name");
+        String description = (String) request.get("description");
+        List<Integer> languages = (List<Integer>) request.get("languages");
+
+        if (name == null || name.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Project name is required"));
         }
 
-        String title = req.getParameter("title");
-        String description = req.getParameter("description");
-        String[] languages = req.getParameterValues("languages");
-        boolean completed = req.getParameter("completed") != null;
-
         Project project = new Project();
-        project.setOwnerId(user.getId());
-        project.setTitle(title);
-        project.setDescription(description);
-        project.setCompleted(completed);
+        project.setTitle(name);
+        project.setDescription(description != null ? description : "");
 
         int projectId = projectDAO.createProjectReturnId(project);
         if (projectId > 0 && languages != null) {
-            List<String> langs = Arrays.asList(languages);
-            for (String lname : langs) {
-                int langId = languageDAO.findOrCreateByName(lname.trim());
-                if (langId > 0) {
-                    languageDAO.linkProjectLanguage(projectId, langId);
-                }
+            for (Integer langId : languages) {
+                languageDAO.linkProjectLanguage(projectId, langId);
             }
         }
 
-        resp.sendRedirect(req.getContextPath() + "/projects");
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id", projectId, "message", "Project created successfully"));
     }
 }

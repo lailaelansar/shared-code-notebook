@@ -10,6 +10,7 @@ public class Project {
     private String description;
     private boolean completed;
     private LocalDateTime createdAt;
+    private String ownerName;
     private List<ProgrammingLanguage> languages;
 
     public Project() {
@@ -78,5 +79,13 @@ public class Project {
 
     public void setLanguages(List<ProgrammingLanguage> languages) {
         this.languages = languages;
+    }
+
+    public String getOwnerName() {
+        return ownerName;
+    }
+
+    public void setOwnerName(String ownerName) {
+        this.ownerName = ownerName;
     }
 }
