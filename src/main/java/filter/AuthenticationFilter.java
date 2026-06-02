@@ -43,6 +43,10 @@ public class AuthenticationFilter implements HandlerInterceptor {
         if (PUBLIC_PATHS.contains(path)) {
             return true;
         }
+        // Allow API endpoints through (token-based auth handled elsewhere)
+        if (path.startsWith("/api/")) {
+            return true;
+        }
         return path.startsWith("/login") || path.startsWith("/register");
     }
 
