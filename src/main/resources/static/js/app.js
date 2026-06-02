@@ -338,7 +338,18 @@ class App {
     }
 
     setupNavigation(template) {
-        const logoutButtons = template.querySelectorAll('.btn-logout');
+        let logoutButtons = [];
+        try {
+            logoutButtons = template.querySelectorAll('.btn-logout');
+        } catch (e) {
+            logoutButtons = [];
+        }
+
+        // If the template fragment is empty after being appended, fall back to the document
+        if (!logoutButtons || logoutButtons.length === 0) {
+            logoutButtons = document.querySelectorAll('.btn-logout');
+        }
+
         logoutButtons.forEach(btn => {
             btn.addEventListener('click', async () => {
                 await api.logout();
