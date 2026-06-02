@@ -61,6 +61,15 @@ class ApiClient {
     }
 
     async logout() {
+        try {
+            // Attempt to notify backend about logout; don't fail if network error
+            await this.request('/auth/logout', { method: 'POST' });
+            console.log('Logout request sent to server');
+        } catch (e) {
+            console.warn('Logout request failed or not required:', e.message);
+        }
+
+        // Clear local auth state
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         this.token = null;
